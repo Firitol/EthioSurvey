@@ -1,0 +1,26 @@
+{
+  "name": "EthioSurvey",
+  "short_name": "EthioSurvey",
+  "description": "Survey Ethiopian services, products, and banks.",
+  "lang": "en",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0a9f5c",
+  "background_color": "#f6f8fb",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

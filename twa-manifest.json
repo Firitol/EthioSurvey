@@ -1,0 +1,18 @@
+{
+  "packageId": "com.ethiosurvey.app",
+  "host": "ethiosurvey.example.com",
+  "name": "EthioSurvey",
+  "launcherName": "EthioSurvey",
+  "display": "standalone",
+  "themeColor": "#0a9f5c",
+  "navigationColor": "#0a9f5c",
+  "backgroundColor": "#f6f8fb",
+  "enableNotifications": false,
+  "startUrl": "/index.html",
+  "iconUrl": "https://ethiosurvey.example.com/icons/playstore-512.png",
+  "maskableIconUrl": "https://ethiosurvey.example.com/icons/playstore-maskable-512.png",
+  "appVersionName": "1.0.1",
+  "appVersionCode": 2,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap"
+}
