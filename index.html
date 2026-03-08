@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EthioSurvey | Service, Product & Bank Feedback</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>EthioSurvey</h1>
+      <p>
+        Collect and review customer feedback on Ethiopian services, products, and
+        banks in one place.
+      </p>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h2>Submit a Survey</h2>
+        <form id="survey-form">
+          <div class="field-grid">
+            <label>
+              Survey Type
+              <select id="survey-type" required>
+                <option value="">Choose type</option>
+                <option value="Service">Service</option>
+                <option value="Product">Product</option>
+                <option value="Bank">Bank</option>
+              </select>
+            </label>
+
+            <label>
+              Name of Service / Product / Bank
+              <input
+                id="entity-name"
+                type="text"
+                placeholder="e.g. Ethiopian Airlines, CBE, local product"
+                required
+              />
+            </label>
+
+            <label>
+              Region or City
+              <input id="location" type="text" placeholder="e.g. Addis Ababa" required />
+            </label>
+
+            <label>
+              Rating (1-5)
+              <input id="rating" type="number" min="1" max="5" required />
+            </label>
+          </div>
+
+          <label>
+            Feedback
+            <textarea
+              id="comment"
+              rows="4"
+              placeholder="Share quality, access, price, customer support, etc."
+              required
+            ></textarea>
+          </label>
+
+          <button type="submit">Save Survey</button>
+          <p id="form-status" class="status"></p>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <h2>Survey Results</h2>
+          <div class="filters">
+            <select id="filter-type">
+              <option value="All">All types</option>
+              <option value="Service">Service</option>
+              <option value="Product">Product</option>
+              <option value="Bank">Bank</option>
+            </select>
+            <button id="clear-data" type="button" class="danger">Clear All</button>
+          </div>
+        </div>
+
+        <div id="summary" class="summary"></div>
+        <ul id="survey-list" class="survey-list"></ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>Built for Ethiopia-wide feedback collection.</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
