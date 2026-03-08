@@ -1,19 +1,21 @@
 const STORAGE_KEY = 'ethioSurveyEntries';
 const deferredInstallPrompt = { event: null };
 
-const form = document.getElementById('survey-form');
-const surveyTypeInput = document.getElementById('survey-type');
-const entityNameInput = document.getElementById('entity-name');
-const locationInput = document.getElementById('location');
-const ratingInput = document.getElementById('rating');
-const commentInput = document.getElementById('comment');
-const statusText = document.getElementById('form-status');
-const surveyList = document.getElementById('survey-list');
-const filterType = document.getElementById('filter-type');
-const clearButton = document.getElementById('clear-data');
-const summary = document.getElementById('summary');
-const installButton = document.getElementById('install-btn');
-const installStatus = document.getElementById('install-status');
+const hasDom = typeof window !== 'undefined' && typeof document !== 'undefined';
+
+const form = hasDom ? document.getElementById('survey-form') : null;
+const surveyTypeInput = hasDom ? document.getElementById('survey-type') : null;
+const entityNameInput = hasDom ? document.getElementById('entity-name') : null;
+const locationInput = hasDom ? document.getElementById('location') : null;
+const ratingInput = hasDom ? document.getElementById('rating') : null;
+const commentInput = hasDom ? document.getElementById('comment') : null;
+const statusText = hasDom ? document.getElementById('form-status') : null;
+const surveyList = hasDom ? document.getElementById('survey-list') : null;
+const filterType = hasDom ? document.getElementById('filter-type') : null;
+const clearButton = hasDom ? document.getElementById('clear-data') : null;
+const summary = hasDom ? document.getElementById('summary') : null;
+const installButton = hasDom ? document.getElementById('install-btn') : null;
+const installStatus = hasDom ? document.getElementById('install-status') : null;
 
 function readEntries() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -106,65 +108,67 @@ async function registerServiceWorker() {
   }
 }
 
-window.addEventListener('beforeinstallprompt', (event) => {
-  event.preventDefault();
-  deferredInstallPrompt.event = event;
-  installButton.hidden = false;
-  installStatus.textContent = 'Install EthioSurvey to use it like a normal mobile app.';
-});
+if (hasDom) {
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt.event = event;
+    installButton.hidden = false;
+    installStatus.textContent = 'Install EthioSurvey to use it like a normal mobile app.';
+  });
 
-installButton.addEventListener('click', async () => {
-  if (!deferredInstallPrompt.event) {
-    installStatus.textContent = 'Install prompt is unavailable. Open this site in Chrome/Edge on Android to install.';
-    return;
-  }
+  installButton.addEventListener('click', async () => {
+    if (!deferredInstallPrompt.event) {
+      installStatus.textContent = 'Install prompt is unavailable. Open this site in Chrome/Edge on Android to install.';
+      return;
+    }
 
-  deferredInstallPrompt.event.prompt();
-  const result = await deferredInstallPrompt.event.userChoice;
-  if (result.outcome === 'accepted') {
-    installStatus.textContent = 'Thanks! EthioSurvey is being installed.';
-  } else {
-    installStatus.textContent = 'Install canceled. You can install anytime later.';
-  }
+    deferredInstallPrompt.event.prompt();
+    const result = await deferredInstallPrompt.event.userChoice;
+    if (result.outcome === 'accepted') {
+      installStatus.textContent = 'Thanks! EthioSurvey is being installed.';
+    } else {
+      installStatus.textContent = 'Install canceled. You can install anytime later.';
+    }
 
-  deferredInstallPrompt.event = null;
-  installButton.hidden = true;
-});
+    deferredInstallPrompt.event = null;
+    installButton.hidden = true;
+  });
 
-window.addEventListener('appinstalled', () => {
-  installStatus.textContent = 'EthioSurvey installed successfully.';
-  installButton.hidden = true;
-});
+  window.addEventListener('appinstalled', () => {
+    installStatus.textContent = 'EthioSurvey installed successfully.';
+    installButton.hidden = true;
+  });
 
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
 
-  const entry = {
-    id: crypto.randomUUID(),
-    type: surveyTypeInput.value,
-    name: entityNameInput.value.trim(),
-    location: locationInput.value.trim(),
-    rating: Number(ratingInput.value),
-    comment: commentInput.value.trim(),
-    createdAt: Date.now(),
-  };
+    const entry = {
+      id: crypto.randomUUID(),
+      type: surveyTypeInput.value,
+      name: entityNameInput.value.trim(),
+      location: locationInput.value.trim(),
+      rating: Number(ratingInput.value),
+      comment: commentInput.value.trim(),
+      createdAt: Date.now(),
+    };
 
-  const entries = readEntries();
-  entries.unshift(entry);
-  writeEntries(entries);
+    const entries = readEntries();
+    entries.unshift(entry);
+    writeEntries(entries);
 
-  statusText.textContent = 'Survey saved successfully.';
-  form.reset();
+    statusText.textContent = 'Survey saved successfully.';
+    form.reset();
+    render();
+  });
+
+  filterType.addEventListener('change', render);
+
+  clearButton.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    statusText.textContent = 'All surveys have been cleared.';
+    render();
+  });
+
+  registerServiceWorker();
   render();
-});
-
-filterType.addEventListener('change', render);
-
-clearButton.addEventListener('click', () => {
-  localStorage.removeItem(STORAGE_KEY);
-  statusText.textContent = 'All surveys have been cleared.';
-  render();
-});
-
-registerServiceWorker();
-render();
+}
