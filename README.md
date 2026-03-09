@@ -66,6 +66,40 @@ bubblewrap build
 
 This produces an Android App Bundle (`.aab`) for Play Console.
 
+#### Troubleshooting archive extraction errors
+
+If you see errors like:
+
+```text
+gzip: stdin: invalid compressed data--format violated
+tar: Unexpected EOF in archive
+tar: Error is not recoverable: exiting now
+```
+
+the downloaded archive is usually incomplete or corrupted. Try:
+
+1. Remove the broken file and re-download it.
+2. Verify it is a valid gzip/tar before extracting:
+
+   ```bash
+   gzip -t <archive>.tar.gz
+   tar -tzf <archive>.tar.gz >/dev/null
+   ```
+
+3. If download keeps failing, use a more resilient download command:
+
+   ```bash
+   curl -fL --retry 5 --retry-delay 2 -o <archive>.tar.gz <url>
+   ```
+
+4. If this happened during package installation, clear the package cache and retry.
+   For npm:
+
+   ```bash
+   npm cache clean --force
+   npm install
+   ```
+
 ### 5) Set up Digital Asset Links
 
 Bubblewrap prints your SHA256 signing fingerprint and required `assetlinks.json`.
