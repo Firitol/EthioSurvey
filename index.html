@@ -28,6 +28,27 @@
 
     <main class="container">
       <section class="card">
+        <h2>Create Account</h2>
+        <form id="account-form">
+          <div class="field-grid">
+            <label>
+              Full Name
+              <input id="user-name" type="text" placeholder="e.g. Sara Bekele" required />
+            </label>
+
+            <label>
+              Email
+              <input id="user-email" type="email" placeholder="e.g. sara@email.com" required />
+            </label>
+          </div>
+
+          <button type="submit">Create Account</button>
+          <p id="account-status" class="status"></p>
+          <p id="account-summary" class="summary"></p>
+        </form>
+      </section>
+
+      <section class="card">
         <h2>Submit a Survey</h2>
         <form id="survey-form">
           <div class="field-grid">
@@ -59,6 +80,32 @@
             <label>
               Rating (1-5)
               <input id="rating" type="number" min="1" max="5" required />
+            </label>
+
+            <label>
+              Number of Questions Answered
+              <input id="question-count" type="number" min="1" value="1" required />
+            </label>
+
+            <label>
+              Earning per Question (ETB)
+              <input id="earning-per-question" type="number" min="1" value="10" required />
+            </label>
+
+            <label>
+              Company Payment Method
+              <select id="payment-method" required>
+                <option value="">Choose payment method</option>
+                <option value="Telebirr">Telebirr</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="CBE Birr">CBE Birr</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </label>
+
+            <label>
+              Company Payment Account
+              <input id="payment-account" type="text" placeholder="Account number / phone" required />
             </label>
           </div>
 
@@ -93,6 +140,25 @@
 
         <div id="summary" class="summary"></div>
         <ul id="survey-list" class="survey-list"></ul>
+      </section>
+
+      <section class="card full-width">
+        <h2>Stored Surveying Reports</h2>
+        <p class="summary" id="report-summary"></p>
+        <div class="table-wrap">
+          <table id="report-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Surveys</th>
+                <th>Questions</th>
+                <th>Total Paid (ETB)</th>
+                <th>Payment Methods</th>
+              </tr>
+            </thead>
+            <tbody id="report-body"></tbody>
+          </table>
+        </div>
       </section>
     </main>
 
