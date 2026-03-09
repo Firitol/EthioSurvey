@@ -31,6 +31,23 @@ body {
   font-size: 2.1rem;
 }
 
+
+.lang-switch {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.lang-switch label {
+  color: #fff;
+  font-weight: 600;
+}
+
+.lang-switch select {
+  min-width: 170px;
+}
+
 .install-box {
   margin-top: 1rem;
 }

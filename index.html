@@ -13,6 +13,14 @@
   </head>
   <body>
     <header class="hero">
+      <div class="lang-switch">
+        <label for="language-select">Language</label>
+        <select id="language-select">
+          <option value="en">English</option>
+          <option value="am">አማርኛ (Amharic)</option>
+          <option value="om">Afaan Oromoo</option>
+        </select>
+      </div>
       <h1>EthioSurvey</h1>
       <p>
         Collect and review customer feedback on Ethiopian services, products, and
@@ -28,7 +36,7 @@
 
     <main class="container">
       <section class="card">
-        <h2>Create Account</h2>
+        <h2 id="account-title">Create Account</h2>
         <form id="account-form">
           <div class="field-grid">
             <label>
@@ -49,7 +57,7 @@
       </section>
 
       <section class="card">
-        <h2>Submit a Survey</h2>
+        <h2 id="survey-title">Submit a Survey</h2>
         <form id="survey-form">
           <div class="field-grid">
             <label>
@@ -126,7 +134,7 @@
 
       <section class="card">
         <div class="section-head">
-          <h2>Survey Results</h2>
+          <h2 id="results-title">Survey Results</h2>
           <div class="filters">
             <select id="filter-type">
               <option value="All">All types</option>
@@ -143,7 +151,7 @@
       </section>
 
       <section class="card full-width">
-        <h2>Stored Surveying Reports</h2>
+        <h2 id="reports-title">Stored Surveying Reports</h2>
         <p class="summary" id="report-summary"></p>
         <div class="table-wrap">
           <table id="report-table">
@@ -163,7 +171,7 @@
     </main>
 
     <footer>
-      <p>Built for Ethiopia-wide feedback collection.</p>
+      <p id="footer-text">Built for Ethiopia-wide feedback collection.</p>
     </footer>
 
    <script type="module" src="app.js"></script>
