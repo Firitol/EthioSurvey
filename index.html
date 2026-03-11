@@ -127,6 +127,25 @@
             ></textarea>
           </label>
 
+          <label>
+            Upload Questions File (JSON/CSV/TXT)
+            <input id="questions-file" type="file" accept=".json,.csv,.txt" />
+          </label>
+
+          <div class="testing-box">
+            <div class="testing-head">
+              <h3>Answer Testing Mode</h3>
+              <button id="start-testing" type="button" class="secondary" disabled>Start Testing</button>
+            </div>
+            <p id="testing-help" class="summary">Upload a question file to run local answer checks before saving.</p>
+            <p id="testing-question" class="testing-question"></p>
+            <div class="testing-controls">
+              <input id="testing-answer" type="text" placeholder="Type your answer" disabled />
+              <button id="submit-answer" type="button" class="secondary" disabled>Check Answer</button>
+            </div>
+            <p id="testing-status" class="status"></p>
+          </div>
+
           <button type="submit">Save Survey</button>
           <p id="form-status" class="status"></p>
         </form>
