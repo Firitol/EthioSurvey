@@ -22,6 +22,13 @@ const earningPerQuestionInput = hasDom ? document.getElementById('earning-per-qu
 const paymentMethodInput = hasDom ? document.getElementById('payment-method') : null;
 const paymentAccountInput = hasDom ? document.getElementById('payment-account') : null;
 const commentInput = hasDom ? document.getElementById('comment') : null;
+const questionsFileInput = hasDom ? document.getElementById('questions-file') : null;
+const startTestingButton = hasDom ? document.getElementById('start-testing') : null;
+const submitAnswerButton = hasDom ? document.getElementById('submit-answer') : null;
+const testingAnswerInput = hasDom ? document.getElementById('testing-answer') : null;
+const testingStatus = hasDom ? document.getElementById('testing-status') : null;
+const testingQuestion = hasDom ? document.getElementById('testing-question') : null;
+const testingHelp = hasDom ? document.getElementById('testing-help') : null;
 const statusText = hasDom ? document.getElementById('form-status') : null;
 const surveyList = hasDom ? document.getElementById('survey-list') : null;
 const filterType = hasDom ? document.getElementById('filter-type') : null;
@@ -72,7 +79,17 @@ const TRANSLATIONS = {
     questions: 'Questions',
     earning: 'Earning',
     total: 'Total',
-    companyPayment: 'Company payment'
+    companyPayment: 'Company payment',
+    testingIdle: 'Upload a questions file to begin answer testing mode.',
+    testingReady: (count) => `Loaded ${count} test question(s). Click Start Testing to begin.`,
+    testingQuestionPrefix: (index, total) => `Question ${index} of ${total}:`,
+    testingCorrect: 'Correct answer. Great work!',
+    testingIncorrect: (expected) => `Not correct. Expected answer: ${expected}`,
+    testingDone: (score, total) => `Testing complete. Score: ${score}/${total}.`,
+    testingNoFile: 'Please upload a question file first.',
+    testingFileError: 'Could not read the uploaded file.',
+    testingUnsupported: 'Unsupported file. Use JSON, CSV, or TXT.',
+    testingParseError: 'No valid questions found. Use question and answer pairs.'
   },
   am: {
     languageLabel: 'ቋንቋ',
@@ -110,7 +127,17 @@ const TRANSLATIONS = {
     questions: 'ጥያቄዎች',
     earning: 'ገቢ',
     total: 'ጠቅላላ',
-    companyPayment: 'የኩባንያ ክፍያ'
+    companyPayment: 'የኩባንያ ክፍያ',
+    testingIdle: 'የጥያቄ ፋይል ያስገቡ እና የመልስ ሙከራ ሁኔታን ይጀምሩ።',
+    testingReady: (count) => `${count} የሙከራ ጥያቄ(ዎች) ተጫኑ። ለመጀመር Start Testing ይጫኑ።`,
+    testingQuestionPrefix: (index, total) => `ጥያቄ ${index}/${total}:`,
+    testingCorrect: 'ትክክለኛ መልስ ነው።',
+    testingIncorrect: (expected) => `ትክክል አይደለም። ትክክለኛው መልስ: ${expected}`,
+    testingDone: (score, total) => `ሙከራው ተጠናቋል። ውጤት: ${score}/${total}`,
+    testingNoFile: 'እባክዎ መጀመሪያ የጥያቄ ፋይል ያስገቡ።',
+    testingFileError: 'የተጫነውን ፋይል ማንበብ አልተቻለም።',
+    testingUnsupported: 'የማይደገፍ ፋይል ነው። JSON, CSV ወይም TXT ይጠቀሙ።',
+    testingParseError: 'ትክክለኛ ጥያቄዎች አልተገኙም። question/answer ጥንድ ያስገቡ።'
   },
   om: {
     languageLabel: 'Afaan',
@@ -148,7 +175,17 @@ const TRANSLATIONS = {
     questions: 'Gaaffilee',
     earning: 'Galii',
     total: 'Waliigalaa',
-    companyPayment: 'Kaffaltii dhaabbataa'
+    companyPayment: 'Kaffaltii dhaabbataa',
+    testingIdle: "Haala qorannoo deebii jalqabuuf faayila gaaffii olkaa'i.",
+    testingReady: (count) => `Gaaffii qorannoo ${count} fe'amaniiru. Start Testing cuqaasi.`,
+    testingQuestionPrefix: (index, total) => `Gaaffii ${index}/${total}:`,
+    testingCorrect: 'Deebiin sirrii dha.',
+    testingIncorrect: (expected) => `Sirrii miti. Deebiin sirrii: ${expected}`,
+    testingDone: (score, total) => `Qorannoon xumurameera. Bu'aa: ${score}/${total}`,
+    testingNoFile: "Maaloo dura faayila gaaffii olkaa'i.",
+    testingFileError: "Faayila olkaa'ame dubbisuu hin dandeenye.",
+    testingUnsupported: 'Faayila hin deeggaramne. JSON, CSV ykn TXT fayyadami.',
+    testingParseError: 'Gaaffii sirrii hin argamne. Qindeessa question/answer fayyadami.'
   }
 };
 
@@ -176,6 +213,9 @@ function applyStaticTranslations() {
   document.getElementById('reports-title').textContent = tt.reportsTitle;
   clearButton.textContent = tt.clearAll;
   document.getElementById('footer-text').textContent = tt.footerText;
+  if (!testingQuestions.length) {
+    testingHelp.textContent = tt.testingIdle;
+  }
 }
 
 function readEntries() {
@@ -209,6 +249,66 @@ function readReports() {
 }
 
 function writeReports(reports) { localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(reports)); }
+
+let testingQuestions = [];
+let testingIndex = 0;
+let testingScore = 0;
+
+function normalizeAnswer(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function parseQuestionsFile(text, extension) {
+  if (extension === 'json') {
+    const parsed = JSON.parse(text);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((row) => ({ question: row?.question, answer: row?.answer }))
+      .filter((row) => row.question && row.answer);
+  }
+
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) return [];
+
+  return lines
+    .map((line) => {
+      const separator = extension === 'csv' ? ',' : '|';
+      const pieces = line.split(separator);
+      if (pieces.length < 2) return null;
+      const question = pieces[0].trim();
+      const answer = pieces.slice(1).join(separator).trim();
+      return question && answer ? { question, answer } : null;
+    })
+    .filter(Boolean);
+}
+
+function setTestingIdle(message) {
+  testingQuestion.textContent = '';
+  testingStatus.textContent = message || t().testingIdle;
+  testingAnswerInput.value = '';
+  testingAnswerInput.disabled = true;
+  submitAnswerButton.disabled = true;
+  startTestingButton.disabled = testingQuestions.length === 0;
+}
+
+function renderTestingQuestion() {
+  const current = testingQuestions[testingIndex];
+  if (!current) {
+    testingQuestion.textContent = '';
+    testingStatus.textContent = t().testingDone(testingScore, testingQuestions.length);
+    testingAnswerInput.disabled = true;
+    submitAnswerButton.disabled = true;
+    startTestingButton.disabled = false;
+    return;
+  }
+
+  testingQuestion.textContent = `${t().testingQuestionPrefix(testingIndex + 1, testingQuestions.length)} ${current.question}`;
+  testingStatus.textContent = '';
+  testingAnswerInput.value = '';
+  testingAnswerInput.disabled = false;
+  submitAnswerButton.disabled = false;
+  testingAnswerInput.focus();
+}
 
 function getFilteredEntries(entries) {
   const chosenType = filterType.value;
@@ -438,6 +538,70 @@ if (hasDom) {
     render();
   });
 
+  questionsFileInput.addEventListener('change', async () => {
+    const file = questionsFileInput.files?.[0];
+    if (!file) {
+      testingQuestions = [];
+      setTestingIdle(t().testingIdle);
+      return;
+    }
+
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!['json', 'csv', 'txt'].includes(extension)) {
+      testingQuestions = [];
+      setTestingIdle(t().testingUnsupported);
+      return;
+    }
+
+    try {
+      const content = await file.text();
+      const parsed = parseQuestionsFile(content, extension);
+      if (!parsed.length) {
+        testingQuestions = [];
+        setTestingIdle(t().testingParseError);
+        return;
+      }
+
+      testingQuestions = parsed;
+      testingIndex = 0;
+      testingScore = 0;
+      testingHelp.textContent = t().testingReady(testingQuestions.length);
+      testingStatus.textContent = '';
+      testingQuestion.textContent = '';
+      testingAnswerInput.value = '';
+      testingAnswerInput.disabled = true;
+      submitAnswerButton.disabled = true;
+      startTestingButton.disabled = false;
+    } catch {
+      testingQuestions = [];
+      setTestingIdle(t().testingFileError);
+    }
+  });
+
+  startTestingButton.addEventListener('click', () => {
+    if (!testingQuestions.length) {
+      setTestingIdle(t().testingNoFile);
+      return;
+    }
+
+    testingIndex = 0;
+    testingScore = 0;
+    startTestingButton.disabled = true;
+    renderTestingQuestion();
+  });
+
+  submitAnswerButton.addEventListener('click', () => {
+    const current = testingQuestions[testingIndex];
+    if (!current) return;
+
+    const isCorrect = normalizeAnswer(testingAnswerInput.value) === normalizeAnswer(current.answer);
+    testingStatus.textContent = isCorrect ? t().testingCorrect : t().testingIncorrect(current.answer);
+    if (isCorrect) testingScore += 1;
+
+    testingIndex += 1;
+    setTimeout(renderTestingQuestion, 450);
+  });
+
   filterType.addEventListener('change', render);
 
   clearButton.addEventListener('click', () => {
@@ -447,6 +611,7 @@ if (hasDom) {
     render();
   });
 
+  setTestingIdle(t().testingIdle);
   registerServiceWorker();
   render();
 }

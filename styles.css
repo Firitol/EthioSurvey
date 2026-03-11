@@ -206,3 +206,45 @@ footer {
   color: var(--muted);
   margin: 1.6rem 0 2.5rem;
 }
+
+
+button.secondary {
+  background: #eef3f9;
+  color: #2e3d52;
+}
+
+button.secondary:hover {
+  background: #dce7f5;
+}
+
+.testing-box {
+  margin-top: 1rem;
+  border: 1px dashed #c7d7ea;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #fbfdff;
+}
+
+.testing-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.testing-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.testing-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.testing-question {
+  font-weight: 600;
+  min-height: 1.2rem;
+}
