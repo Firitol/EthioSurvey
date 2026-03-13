@@ -1,617 +1,173 @@
-const STORAGE_KEY = 'ethioSurveyEntries';
-const ACCOUNT_STORAGE_KEY = 'ethioSurveyAccount';
-const REPORT_STORAGE_KEY = 'ethioSurveyReports';
-const LANGUAGE_STORAGE_KEY = 'ethioSurveyLanguage';
-const deferredInstallPrompt = { event: null };
+import { createClient } from "@supabase/supabase-js";
 
-const hasDom = typeof window !== 'undefined' && typeof document !== 'undefined';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const accountForm = hasDom ? document.getElementById('account-form') : null;
-const userNameInput = hasDom ? document.getElementById('user-name') : null;
-const userEmailInput = hasDom ? document.getElementById('user-email') : null;
-const accountStatus = hasDom ? document.getElementById('account-status') : null;
-const accountSummary = hasDom ? document.getElementById('account-summary') : null;
+const statusEl = document.getElementById("auth-status");
+const registerForm = document.getElementById("register-form");
+const loginForm = document.getElementById("login-form");
+const tabRegister = document.getElementById("tab-register");
+const tabLogin = document.getElementById("tab-login");
+const sessionCard = document.getElementById("session-card");
+const logoutBtn = document.getElementById("logout-btn");
 
-const form = hasDom ? document.getElementById('survey-form') : null;
-const surveyTypeInput = hasDom ? document.getElementById('survey-type') : null;
-const entityNameInput = hasDom ? document.getElementById('entity-name') : null;
-const locationInput = hasDom ? document.getElementById('location') : null;
-const ratingInput = hasDom ? document.getElementById('rating') : null;
-const questionCountInput = hasDom ? document.getElementById('question-count') : null;
-const earningPerQuestionInput = hasDom ? document.getElementById('earning-per-question') : null;
-const paymentMethodInput = hasDom ? document.getElementById('payment-method') : null;
-const paymentAccountInput = hasDom ? document.getElementById('payment-account') : null;
-const commentInput = hasDom ? document.getElementById('comment') : null;
-const questionsFileInput = hasDom ? document.getElementById('questions-file') : null;
-const startTestingButton = hasDom ? document.getElementById('start-testing') : null;
-const submitAnswerButton = hasDom ? document.getElementById('submit-answer') : null;
-const testingAnswerInput = hasDom ? document.getElementById('testing-answer') : null;
-const testingStatus = hasDom ? document.getElementById('testing-status') : null;
-const testingQuestion = hasDom ? document.getElementById('testing-question') : null;
-const testingHelp = hasDom ? document.getElementById('testing-help') : null;
-const statusText = hasDom ? document.getElementById('form-status') : null;
-const surveyList = hasDom ? document.getElementById('survey-list') : null;
-const filterType = hasDom ? document.getElementById('filter-type') : null;
-const clearButton = hasDom ? document.getElementById('clear-data') : null;
-const summary = hasDom ? document.getElementById('summary') : null;
-const reportSummary = hasDom ? document.getElementById('report-summary') : null;
-const reportBody = hasDom ? document.getElementById('report-body') : null;
-const installButton = hasDom ? document.getElementById('install-btn') : null;
-const installStatus = hasDom ? document.getElementById('install-status') : null;
-const languageSelect = hasDom ? document.getElementById('language-select') : null;
+let supabase;
 
-let currentLanguage = 'en';
-
-const TRANSLATIONS = {
-  en: {
-    languageLabel: 'Language',
-    heroText: 'Collect and review customer feedback on Ethiopian services, products, and banks in one place.',
-    installBtn: 'Install EthioSurvey',
-    installTip: 'Tip: Once installed, EthioSurvey works like a mobile app.',
-    accountTitle: 'Create Account',
-    surveyTitle: 'Submit a Survey',
-    resultsTitle: 'Survey Results',
-    reportsTitle: 'Stored Surveying Reports',
-    footerText: 'Built for Ethiopia-wide feedback collection.',
-    clearAll: 'Clear All',
-    noSurveys: 'No surveys yet for this selection.',
-    noReports: 'No reports yet.',
-    noReportData: 'No report data yet. Reports are stored automatically once surveys are submitted.',
-    noAccount: 'No account yet. Create an account before submitting surveys to track earnings.',
-    installNotSupported: 'Install support is limited: service worker is not available in this browser.',
-    installFailed: 'Could not enable offline install support. Please refresh and try again.',
-    installPromptReady: 'Install EthioSurvey to use it like a normal mobile app.',
-    installPromptUnavailable: 'Install prompt is unavailable. Open this site in Chrome/Edge on Android to install.',
-    installAccepted: 'Thanks! EthioSurvey is being installed.',
-    installCanceled: 'Install canceled. You can install anytime later.',
-    installedSuccess: 'EthioSurvey installed successfully.',
-    accountCreated: 'Account created successfully. You can now submit paid surveys.',
-    createAccountFirst: 'Please create an account first so your survey earnings can be tracked.',
-    surveySaved: 'Survey completed and saved. Earnings and company payment method recorded.',
-    allCleared: 'All surveys and stored reports have been cleared.',
-    summaryText: (count, avg, paid) => `${count} survey(s) shown • Average rating: ${avg}/5 • Total earned: ${paid} ETB`,
-    accountSummaryText: (name, email, surveys, questions, earnings) => `Logged in as ${name} (${email}) • Surveys completed: ${surveys} • Questions answered: ${questions} • Total earnings: ${earnings} ETB`,
-    reportSummaryText: (companies, surveys, questions, payout) => `${companies} company report(s) stored • ${surveys} completed survey(s) • ${questions} question(s) answered • ${payout} ETB total payout`,
-    submittedAt: 'Submitted',
-    user: 'User',
-    location: 'Location',
-    rating: 'Rating',
-    questions: 'Questions',
-    earning: 'Earning',
-    total: 'Total',
-    companyPayment: 'Company payment',
-    testingIdle: 'Upload a questions file to begin answer testing mode.',
-    testingReady: (count) => `Loaded ${count} test question(s). Click Start Testing to begin.`,
-    testingQuestionPrefix: (index, total) => `Question ${index} of ${total}:`,
-    testingCorrect: 'Correct answer. Great work!',
-    testingIncorrect: (expected) => `Not correct. Expected answer: ${expected}`,
-    testingDone: (score, total) => `Testing complete. Score: ${score}/${total}.`,
-    testingNoFile: 'Please upload a question file first.',
-    testingFileError: 'Could not read the uploaded file.',
-    testingUnsupported: 'Unsupported file. Use JSON, CSV, or TXT.',
-    testingParseError: 'No valid questions found. Use question and answer pairs.'
-  },
-  am: {
-    languageLabel: 'ቋንቋ',
-    heroText: 'የኢትዮጵያ አገልግሎቶች፣ ምርቶች እና ባንኮች ላይ የደንበኛ አስተያየት ይሰብስቡ እና ይመልከቱ።',
-    installBtn: 'EthioSurvey ያስገቡ',
-    installTip: 'ጥቆማ፡ ከተጫነ በኋላ EthioSurvey እንደ ሞባይል መተግበሪያ ይሰራል።',
-    accountTitle: 'መለያ ይፍጠሩ',
-    surveyTitle: 'ዳሰሳ ያስገቡ',
-    resultsTitle: 'የዳሰሳ ውጤቶች',
-    reportsTitle: 'የተቀመጡ የዳሰሳ ሪፖርቶች',
-    footerText: 'ለኢትዮጵያ አቀፍ አስተያየት ስብስብ የተገነባ።',
-    clearAll: 'ሁሉን አጥፋ',
-    noSurveys: 'ለዚህ ምርጫ እስካሁን ዳሰሳ የለም።',
-    noReports: 'እስካሁን ሪፖርት የለም።',
-    noReportData: 'እስካሁን የሪፖርት ውሂብ የለም። ዳሰሳ ሲገባ ሪፖርቶች በራስ-ሰር ይቀመጣሉ።',
-    noAccount: 'መለያ አልተፈጠረም። ገቢዎን ለመከታተል ዳሰሳ ከማስገባትዎ በፊት መለያ ይፍጠሩ።',
-    installNotSupported: 'የመጫን ድጋፍ ውስን ነው፦ በዚህ አሳሽ service worker አይገኝም።',
-    installFailed: 'ከመስመር ውጭ የመጫን ድጋፍ ማንቃት አልተቻለም። እባክዎ ያድሱ እና ዳግም ይሞክሩ።',
-    installPromptReady: 'EthioSurvey እንደ መደበኛ ሞባይል መተግበሪያ ለመጠቀም ያስገቡ።',
-    installPromptUnavailable: 'የመጫኛ መጠየቂያ አይገኝም። ለመጫን ይህን ጣቢያ Chrome/Edge በAndroid ላይ ይክፈቱ።',
-    installAccepted: 'እናመሰግናለን! EthioSurvey በመጫን ላይ ነው።',
-    installCanceled: 'መጫን ተሰርዟል። በኋላ ማንኛውም ጊዜ መጫን ይችላሉ።',
-    installedSuccess: 'EthioSurvey በተሳካ ሁኔታ ተጭኗል።',
-    accountCreated: 'መለያ በተሳካ ሁኔታ ተፈጥሯል። አሁን የተከፈለ ዳሰሳ ማስገባት ይችላሉ።',
-    createAccountFirst: 'የዳሰሳ ገቢዎን ለመከታተል እባክዎ መጀመሪያ መለያ ይፍጠሩ።',
-    surveySaved: 'ዳሰሳው ተጠናቋል እና ተቀምጧል። ገቢ እና የኩባንያ ክፍያ ዘዴ ተመዝግቧል።',
-    allCleared: 'ሁሉም ዳሰሳዎች እና የተቀመጡ ሪፖርቶች ተሰርዘዋል።',
-    summaryText: (count, avg, paid) => `${count} ዳሰሳ ታይቷል • አማካይ ደረጃ: ${avg}/5 • ጠቅላላ ገቢ: ${paid} ETB`,
-    accountSummaryText: (name, email, surveys, questions, earnings) => `${name} (${email}) ገብቷል • የተጠናቀቁ ዳሰሳዎች: ${surveys} • የተመለሱ ጥያቄዎች: ${questions} • ጠቅላላ ገቢ: ${earnings} ETB`,
-    reportSummaryText: (companies, surveys, questions, payout) => `${companies} የኩባንያ ሪፖርት ተቀምጧል • ${surveys} የተጠናቀቁ ዳሰሳዎች • ${questions} የተመለሱ ጥያቄዎች • ${payout} ETB ጠቅላላ ክፍያ`,
-    submittedAt: 'የተላከበት',
-    user: 'ተጠቃሚ',
-    location: 'አካባቢ',
-    rating: 'ደረጃ',
-    questions: 'ጥያቄዎች',
-    earning: 'ገቢ',
-    total: 'ጠቅላላ',
-    companyPayment: 'የኩባንያ ክፍያ',
-    testingIdle: 'የጥያቄ ፋይል ያስገቡ እና የመልስ ሙከራ ሁኔታን ይጀምሩ።',
-    testingReady: (count) => `${count} የሙከራ ጥያቄ(ዎች) ተጫኑ። ለመጀመር Start Testing ይጫኑ።`,
-    testingQuestionPrefix: (index, total) => `ጥያቄ ${index}/${total}:`,
-    testingCorrect: 'ትክክለኛ መልስ ነው።',
-    testingIncorrect: (expected) => `ትክክል አይደለም። ትክክለኛው መልስ: ${expected}`,
-    testingDone: (score, total) => `ሙከራው ተጠናቋል። ውጤት: ${score}/${total}`,
-    testingNoFile: 'እባክዎ መጀመሪያ የጥያቄ ፋይል ያስገቡ።',
-    testingFileError: 'የተጫነውን ፋይል ማንበብ አልተቻለም።',
-    testingUnsupported: 'የማይደገፍ ፋይል ነው። JSON, CSV ወይም TXT ይጠቀሙ።',
-    testingParseError: 'ትክክለኛ ጥያቄዎች አልተገኙም። question/answer ጥንድ ያስገቡ።'
-  },
-  om: {
-    languageLabel: 'Afaan',
-    heroText: 'Yaada maamiltootaa tajaajiloota, oomishaalee fi baankota Itoophiyaa irratti walitti qabiitii ilaali.',
-    installBtn: 'EthioSurvey Fe\'i',
-    installTip: 'Gorsa: Erga fe\'amee booda EthioSurvey akka appii moobaayiliitti hojjeta.',
-    accountTitle: 'Herrega Uumi',
-    surveyTitle: 'Qorannoo Galchi',
-    resultsTitle: 'Bu\'aa Qorannoo',
-    reportsTitle: 'Gabaasota Qorannoo Kuufaman',
-    footerText: 'Walitti qabama yaadaa guutuu Itoophiyaaf ijaarame.',
-    clearAll: 'Hunda Haqi',
-    noSurveys: 'Filannoo kanaaf amma qorannoon hin jiru.',
-    noReports: 'Amma gabaasni hin jiru.',
-    noReportData: 'Amma deetaan gabaasaa hin jiru. Qorannoon yeroo galfamu gabaasonni ofumaan kuufamu.',
-    noAccount: 'Herregni hin jiru. Galii hordofuuf dura herrega uumi.',
-    installNotSupported: 'Deeggarsi fe\'umsaa daangeffamaadha: browser kana keessatti service worker hin jiru.',
-    installFailed: 'Deeggarsa fe\'umsa offline dandeessisuu hin dandeenye. Haaromsiitii irra deebi\'i yaali.',
-    installPromptReady: 'EthioSurvey akka appii moobaayilii idileetti fayyadamuuf fe\'i.',
-    installPromptUnavailable: 'Gaaffiin fe\'umsaa hin argamu. Iddoo kana Chrome/Edge irratti Android fayyadamuun bani.',
-    installAccepted: 'Galatoomi! EthioSurvey fe\'amaa jira.',
-    installCanceled: 'Fe\'uun haqameera. Booda yeroo kamiyyuu fe\'uu dandeessa.',
-    installedSuccess: 'EthioSurvey milkaa\'inaan fe\'ameera.',
-    accountCreated: 'Herregni milkaa\'inaan uumameera. Amma qorannoo kaffaltii qabu galchuu dandeessa.',
-    createAccountFirst: 'Galii qorannoo hordofuuf maaloo dura herrega uumi.',
-    surveySaved: 'Qorannoon xumuramee kuufameera. Galii fi mala kaffaltii dhaabbataa galmaa\'eera.',
-    allCleared: 'Qorannoowwan fi gabaasonni kuufaman hundi haqamaniiru.',
-    summaryText: (count, avg, paid) => `${count} qorannoo mul\'ata • Sadarkaa giddugaleessaa: ${avg}/5 • Galii waliigalaa: ${paid} ETB`,
-    accountSummaryText: (name, email, surveys, questions, earnings) => `${name} (${email}) seeneera • Qorannoowwan xumuraman: ${surveys} • Gaaffileen deebii argatan: ${questions} • Galii waliigalaa: ${earnings} ETB`,
-    reportSummaryText: (companies, surveys, questions, payout) => `${companies} gabaasa dhaabbataa kuufame • ${surveys} qorannoo xumurame • ${questions} gaaffii deebii argate • ${payout} ETB kaffaltii waliigalaa`,
-    submittedAt: 'Kan galfame',
-    user: 'Fayyadamaa',
-    location: 'Iddoo',
-    rating: 'Sadarkaa',
-    questions: 'Gaaffilee',
-    earning: 'Galii',
-    total: 'Waliigalaa',
-    companyPayment: 'Kaffaltii dhaabbataa',
-    testingIdle: "Haala qorannoo deebii jalqabuuf faayila gaaffii olkaa'i.",
-    testingReady: (count) => `Gaaffii qorannoo ${count} fe'amaniiru. Start Testing cuqaasi.`,
-    testingQuestionPrefix: (index, total) => `Gaaffii ${index}/${total}:`,
-    testingCorrect: 'Deebiin sirrii dha.',
-    testingIncorrect: (expected) => `Sirrii miti. Deebiin sirrii: ${expected}`,
-    testingDone: (score, total) => `Qorannoon xumurameera. Bu'aa: ${score}/${total}`,
-    testingNoFile: "Maaloo dura faayila gaaffii olkaa'i.",
-    testingFileError: "Faayila olkaa'ame dubbisuu hin dandeenye.",
-    testingUnsupported: 'Faayila hin deeggaramne. JSON, CSV ykn TXT fayyadami.',
-    testingParseError: 'Gaaffii sirrii hin argamne. Qindeessa question/answer fayyadami.'
-  }
-};
-
-function t() {
-  return TRANSLATIONS[currentLanguage] || TRANSLATIONS.en;
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+} else {
+  setStatus("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in environment.", "error");
 }
 
-function setLanguage(lang) {
-  currentLanguage = TRANSLATIONS[lang] ? lang : 'en';
-  localStorage.setItem(LANGUAGE_STORAGE_KEY, currentLanguage);
-  document.documentElement.lang = currentLanguage;
-  applyStaticTranslations();
-  render();
+function setStatus(message, tone = "") {
+  statusEl.textContent = message;
+  statusEl.className = `status ${tone}`.trim();
 }
 
-function applyStaticTranslations() {
-  const tt = t();
-  document.querySelector('.lang-switch label').textContent = tt.languageLabel;
-  document.querySelector('.hero p').textContent = tt.heroText;
-  installButton.textContent = tt.installBtn;
-  installStatus.textContent = installStatus.textContent || tt.installTip;
-  document.getElementById('account-title').textContent = tt.accountTitle;
-  document.getElementById('survey-title').textContent = tt.surveyTitle;
-  document.getElementById('results-title').textContent = tt.resultsTitle;
-  document.getElementById('reports-title').textContent = tt.reportsTitle;
-  clearButton.textContent = tt.clearAll;
-  document.getElementById('footer-text').textContent = tt.footerText;
-  if (!testingQuestions.length) {
-    testingHelp.textContent = tt.testingIdle;
-  }
+function setTab(mode) {
+  const registerMode = mode === "register";
+  registerForm.classList.toggle("is-hidden", !registerMode);
+  loginForm.classList.toggle("is-hidden", registerMode);
+  tabRegister.classList.toggle("is-active", registerMode);
+  tabLogin.classList.toggle("is-active", !registerMode);
+  tabRegister.setAttribute("aria-selected", String(registerMode));
+  tabLogin.setAttribute("aria-selected", String(!registerMode));
+  setStatus("");
 }
 
-function readEntries() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeEntries(entries) { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
-
-function readAccount() {
-  const raw = localStorage.getItem(ACCOUNT_STORAGE_KEY);
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
-}
-
-function writeAccount(account) { localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(account)); }
-
-function readReports() {
-  const raw = localStorage.getItem(REPORT_STORAGE_KEY);
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch { return {}; }
-}
-
-function writeReports(reports) { localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(reports)); }
-
-let testingQuestions = [];
-let testingIndex = 0;
-let testingScore = 0;
-
-function normalizeAnswer(value) {
-  return String(value || '').trim().toLowerCase();
-}
-
-function parseQuestionsFile(text, extension) {
-  if (extension === 'json') {
-    const parsed = JSON.parse(text);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map((row) => ({ question: row?.question, answer: row?.answer }))
-      .filter((row) => row.question && row.answer);
-  }
-
-  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  if (!lines.length) return [];
-
-  return lines
-    .map((line) => {
-      const separator = extension === 'csv' ? ',' : '|';
-      const pieces = line.split(separator);
-      if (pieces.length < 2) return null;
-      const question = pieces[0].trim();
-      const answer = pieces.slice(1).join(separator).trim();
-      return question && answer ? { question, answer } : null;
-    })
-    .filter(Boolean);
-}
-
-function setTestingIdle(message) {
-  testingQuestion.textContent = '';
-  testingStatus.textContent = message || t().testingIdle;
-  testingAnswerInput.value = '';
-  testingAnswerInput.disabled = true;
-  submitAnswerButton.disabled = true;
-  startTestingButton.disabled = testingQuestions.length === 0;
-}
-
-function renderTestingQuestion() {
-  const current = testingQuestions[testingIndex];
-  if (!current) {
-    testingQuestion.textContent = '';
-    testingStatus.textContent = t().testingDone(testingScore, testingQuestions.length);
-    testingAnswerInput.disabled = true;
-    submitAnswerButton.disabled = true;
-    startTestingButton.disabled = false;
+function renderSession(profile, user) {
+  if (!user) {
+    sessionCard.innerHTML = "<p>No active session.</p>";
+    logoutBtn.hidden = true;
     return;
   }
 
-  testingQuestion.textContent = `${t().testingQuestionPrefix(testingIndex + 1, testingQuestions.length)} ${current.question}`;
-  testingStatus.textContent = '';
-  testingAnswerInput.value = '';
-  testingAnswerInput.disabled = false;
-  submitAnswerButton.disabled = false;
-  testingAnswerInput.focus();
-}
-
-function getFilteredEntries(entries) {
-  const chosenType = filterType.value;
-  if (chosenType === 'All') return entries;
-  return entries.filter((entry) => entry.type === chosenType);
-}
-
-function avgRating(entries) {
-  if (!entries.length) return '0.0';
-  const total = entries.reduce((sum, entry) => sum + Number(entry.rating), 0);
-  return (total / entries.length).toFixed(1);
-}
-
-function totalEarnings(entries) { return entries.reduce((sum, entry) => sum + Number(entry.totalEarning), 0); }
-
-function buildSummary(entries) {
-  const filtered = getFilteredEntries(entries);
-  const paid = totalEarnings(filtered).toFixed(2);
-  summary.textContent = t().summaryText(filtered.length, avgRating(filtered), paid);
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-function entryTemplate(entry) {
-  const tt = t();
-  return `
-    <li class="survey-item">
-      <div class="survey-top">
-        <strong>${escapeHtml(entry.name)}</strong>
-        <span class="type-pill">${escapeHtml(entry.type)}</span>
-      </div>
-      <p><strong>${tt.user}:</strong> ${escapeHtml(entry.userName)} (${escapeHtml(entry.userEmail)})</p>
-      <p><strong>${tt.location}:</strong> ${escapeHtml(entry.location)}</p>
-      <p><strong>${tt.rating}:</strong> ${entry.rating}/5</p>
-      <p><strong>${tt.questions}:</strong> ${entry.questionCount} • <strong>${tt.earning}:</strong> ${entry.earningPerQuestion} ETB per question • <strong>${tt.total}:</strong> ${entry.totalEarning} ETB</p>
-      <p><strong>${tt.companyPayment}:</strong> ${escapeHtml(entry.paymentMethod)} (${escapeHtml(entry.paymentAccount)})</p>
-      <p>${escapeHtml(entry.comment)}</p>
-      <small>${tt.submittedAt}: ${new Date(entry.createdAt).toLocaleString()}</small>
-    </li>
+  sessionCard.innerHTML = `
+    <dl>
+      <dt>Name</dt><dd>${profile?.full_name || "Not provided"}</dd>
+      <dt>Email</dt><dd>${user.email}</dd>
+      <dt>Role</dt><dd>${profile?.account_type || "Not set"}</dd>
+      <dt>Phone</dt><dd>${profile?.phone || "Not set"}</dd>
+      <dt>Company</dt><dd>${profile?.company_name || "Not set"}</dd>
+    </dl>
   `;
+  logoutBtn.hidden = false;
 }
 
-function renderReports() {
-  const tt = t();
-  const reports = readReports();
-  const rows = Object.values(reports);
+async function loadSession() {
+  if (!supabase) return;
 
-  if (!rows.length) {
-    reportSummary.textContent = tt.noReportData;
-    reportBody.innerHTML = `<tr><td colspan="5">${tt.noReports}</td></tr>`;
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    setStatus(error.message, "error");
     return;
   }
 
-  const totalSurveys = rows.reduce((sum, row) => sum + row.surveyCount, 0);
-  const totalQuestionsAnswered = rows.reduce((sum, row) => sum + row.totalQuestions, 0);
-  const totalPayout = rows.reduce((sum, row) => sum + row.totalPaid, 0);
-
-  reportSummary.textContent = tt.reportSummaryText(rows.length, totalSurveys, totalQuestionsAnswered, totalPayout.toFixed(2));
-
-  reportBody.innerHTML = rows
-    .map((row) => {
-      const methods = Array.from(new Set(row.paymentMethods)).join(', ');
-      return `<tr>
-        <td>${escapeHtml(row.company)}</td>
-        <td>${row.surveyCount}</td>
-        <td>${row.totalQuestions}</td>
-        <td>${row.totalPaid.toFixed(2)}</td>
-        <td>${escapeHtml(methods)}</td>
-      </tr>`;
-    })
-    .join('');
-}
-
-function renderAccountSummary() {
-  const account = readAccount();
-  if (!account) {
-    accountSummary.textContent = t().noAccount;
+  const user = data.session?.user;
+  if (!user) {
+    renderSession(null, null);
     return;
   }
 
-  const entries = readEntries().filter((entry) => entry.userEmail === account.email);
-  const earnings = totalEarnings(entries).toFixed(2);
-  const questionsAnswered = entries.reduce((sum, entry) => sum + entry.questionCount, 0);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, account_type, phone, company_name")
+    .eq("id", user.id)
+    .single();
 
-  accountSummary.textContent = t().accountSummaryText(account.name, account.email, entries.length, questionsAnswered, earnings);
+  renderSession(profile, user);
 }
 
-function render() {
-  const entries = readEntries();
-  const filtered = getFilteredEntries(entries);
-  buildSummary(entries);
+registerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!supabase) return;
 
-  if (!filtered.length) {
-    surveyList.innerHTML = `<li class="survey-item">${t().noSurveys}</li>`;
-  } else {
-    surveyList.innerHTML = filtered.map(entryTemplate).join('');
-  }
+  const fullName = document.getElementById("register-name").value.trim();
+  const email = document.getElementById("register-email").value.trim();
+  const password = document.getElementById("register-password").value;
+  const accountType = document.getElementById("register-role").value;
+  const phone = document.getElementById("register-phone").value.trim();
+  const companyName = document.getElementById("register-company").value.trim();
 
-  renderAccountSummary();
-  renderReports();
-}
-
-function updateReports(entry) {
-  const reports = readReports();
-  const existing = reports[entry.name] || {
-    company: entry.name,
-    surveyCount: 0,
-    totalQuestions: 0,
-    totalPaid: 0,
-    paymentMethods: [],
-  };
-
-  existing.surveyCount += 1;
-  existing.totalQuestions += entry.questionCount;
-  existing.totalPaid += entry.totalEarning;
-  existing.paymentMethods.push(entry.paymentMethod);
-  reports[entry.name] = existing;
-
-  writeReports(reports);
-}
-
-async function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) {
-    installStatus.textContent = t().installNotSupported;
+  if (accountType === "company" && !companyName) {
+    setStatus("Company name is required for company accounts.", "error");
     return;
   }
 
-  try {
-    await navigator.serviceWorker.register('service-worker.js');
-  } catch {
-    installStatus.textContent = t().installFailed;
-  }
-}
-
-if (hasDom) {
-  const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) || 'en';
-  if (languageSelect) languageSelect.value = storedLanguage;
-  setLanguage(storedLanguage);
-
-  languageSelect?.addEventListener('change', () => setLanguage(languageSelect.value));
-
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferredInstallPrompt.event = event;
-    installButton.hidden = false;
-    installStatus.textContent = t().installPromptReady;
-  });
-
-  installButton.addEventListener('click', async () => {
-    if (!deferredInstallPrompt.event) {
-      installStatus.textContent = t().installPromptUnavailable;
-      return;
-    }
-
-    deferredInstallPrompt.event.prompt();
-    const result = await deferredInstallPrompt.event.userChoice;
-    installStatus.textContent = result.outcome === 'accepted' ? t().installAccepted : t().installCanceled;
-
-    deferredInstallPrompt.event = null;
-    installButton.hidden = true;
-  });
-
-  window.addEventListener('appinstalled', () => {
-    installStatus.textContent = t().installedSuccess;
-    installButton.hidden = true;
-  });
-
-  accountForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    const account = {
-      name: userNameInput.value.trim(),
-      email: userEmailInput.value.trim().toLowerCase(),
-      createdAt: Date.now(),
-    };
-
-    writeAccount(account);
-    accountStatus.textContent = t().accountCreated;
-    renderAccountSummary();
-  });
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    const account = readAccount();
-    if (!account) {
-      statusText.textContent = t().createAccountFirst;
-      return;
-    }
-
-    const questionCount = Number(questionCountInput.value);
-    const earningPerQuestion = Number(earningPerQuestionInput.value);
-
-    const entry = {
-      id: crypto.randomUUID(),
-      type: surveyTypeInput.value,
-      name: entityNameInput.value.trim(),
-      location: locationInput.value.trim(),
-      rating: Number(ratingInput.value),
-      questionCount,
-      earningPerQuestion,
-      totalEarning: questionCount * earningPerQuestion,
-      paymentMethod: paymentMethodInput.value,
-      paymentAccount: paymentAccountInput.value.trim(),
-      comment: commentInput.value.trim(),
-      userName: account.name,
-      userEmail: account.email,
-      createdAt: Date.now(),
-    };
-
-    const entries = readEntries();
-    entries.unshift(entry);
-    writeEntries(entries);
-    updateReports(entry);
-
-    statusText.textContent = t().surveySaved;
-    form.reset();
-    questionCountInput.value = '1';
-    earningPerQuestionInput.value = '10';
-    render();
-  });
-
-  questionsFileInput.addEventListener('change', async () => {
-    const file = questionsFileInput.files?.[0];
-    if (!file) {
-      testingQuestions = [];
-      setTestingIdle(t().testingIdle);
-      return;
-    }
-
-    const extension = file.name.split('.').pop().toLowerCase();
-    if (!['json', 'csv', 'txt'].includes(extension)) {
-      testingQuestions = [];
-      setTestingIdle(t().testingUnsupported);
-      return;
-    }
-
-    try {
-      const content = await file.text();
-      const parsed = parseQuestionsFile(content, extension);
-      if (!parsed.length) {
-        testingQuestions = [];
-        setTestingIdle(t().testingParseError);
-        return;
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        account_type: accountType,
+        phone,
+        company_name: companyName || null
       }
-
-      testingQuestions = parsed;
-      testingIndex = 0;
-      testingScore = 0;
-      testingHelp.textContent = t().testingReady(testingQuestions.length);
-      testingStatus.textContent = '';
-      testingQuestion.textContent = '';
-      testingAnswerInput.value = '';
-      testingAnswerInput.disabled = true;
-      submitAnswerButton.disabled = true;
-      startTestingButton.disabled = false;
-    } catch {
-      testingQuestions = [];
-      setTestingIdle(t().testingFileError);
     }
   });
 
-  startTestingButton.addEventListener('click', () => {
-    if (!testingQuestions.length) {
-      setTestingIdle(t().testingNoFile);
+  if (error) {
+    setStatus(error.message, "error");
+    return;
+  }
+
+  const userId = data.user?.id;
+
+  if (userId) {
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: userId,
+      full_name: fullName,
+      email,
+      account_type: accountType,
+      phone: phone || null,
+      company_name: companyName || null
+    });
+
+    if (profileError) {
+      setStatus(`Account created but profile save failed: ${profileError.message}`, "error");
       return;
     }
+  }
 
-    testingIndex = 0;
-    testingScore = 0;
-    startTestingButton.disabled = true;
-    renderTestingQuestion();
-  });
+  setStatus("Registration successful. Check your email if confirmation is enabled.", "success");
+  registerForm.reset();
+  await loadSession();
+});
 
-  submitAnswerButton.addEventListener('click', () => {
-    const current = testingQuestions[testingIndex];
-    if (!current) return;
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!supabase) return;
 
-    const isCorrect = normalizeAnswer(testingAnswerInput.value) === normalizeAnswer(current.answer);
-    testingStatus.textContent = isCorrect ? t().testingCorrect : t().testingIncorrect(current.answer);
-    if (isCorrect) testingScore += 1;
+  const email = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
 
-    testingIndex += 1;
-    setTimeout(renderTestingQuestion, 450);
-  });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    setStatus(error.message, "error");
+    return;
+  }
 
-  filterType.addEventListener('change', render);
+  setStatus("Login successful.", "success");
+  loginForm.reset();
+  await loadSession();
+});
 
-  clearButton.addEventListener('click', () => {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(REPORT_STORAGE_KEY);
-    statusText.textContent = t().allCleared;
-    render();
-  });
+logoutBtn.addEventListener("click", async () => {
+  if (!supabase) return;
 
-  setTestingIdle(t().testingIdle);
-  registerServiceWorker();
-  render();
-}
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    setStatus(error.message, "error");
+    return;
+  }
+
+  setStatus("Logged out.", "success");
+  renderSession(null, null);
+});
+
+tabRegister.addEventListener("click", () => setTab("register"));
+tabLogin.addEventListener("click", () => setTab("login"));
+
+setTab("register");
+loadSession();
