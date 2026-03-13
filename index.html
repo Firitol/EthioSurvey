@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#0f172a" />
     <meta
       name="description"
+      content="EthioSurvey connects freelancers, employees, and companies with secure account registration and login."
+    />
+    <title>EthioSurvey | Auth Portal</title>
       content="EthioSurvey connects Ethiopian freelancers and companies with secure account registration and login."
     />
     <title>EthioSurvey | Freelancer & Company Portal</title>
@@ -18,6 +21,9 @@
     <header class="hero">
       <div class="hero__content">
         <p class="eyebrow">EthioSurvey Platform</p>
+        <h1>Professional onboarding for workers and companies</h1>
+        <p class="hero__subtitle">
+          Register as a freelancer, employee, or company and access role-specific dashboards.
         <h1>Professional onboarding for freelancers and companies</h1>
         <p class="hero__subtitle">
           Create an account, choose your role, and securely access the EthioSurvey portal powered by PostgreSQL.
@@ -29,6 +35,7 @@
       <section class="panel">
         <div class="panel__head">
           <h2>Account Access</h2>
+          <p>Create a new account or log in to continue.</p>
           <p>Register a new account or log in to your existing workspace.</p>
         </div>
 
@@ -45,6 +52,7 @@
             </label>
             <label>
               Email
+              <input id="register-email" type="email" placeholder="you@domain.com" required />
               <input id="register-email" type="email" placeholder="you@company.com" required />
             </label>
             <label>
@@ -56,6 +64,7 @@
               <select id="register-role" required>
                 <option value="">Choose role</option>
                 <option value="freelancer">Freelancer</option>
+                <option value="employee">Employee</option>
                 <option value="company">Company</option>
               </select>
             </label>
@@ -75,6 +84,7 @@
           <div class="field-grid">
             <label>
               Email
+              <input id="login-email" type="email" placeholder="you@domain.com" required />
               <input id="login-email" type="email" placeholder="you@company.com" required />
             </label>
             <label>
@@ -90,6 +100,10 @@
 
       <section class="panel">
         <div class="panel__head">
+          <h2>Quick Access</h2>
+          <p>Jump directly to the questionnaire dashboard after login.</p>
+        </div>
+        <a class="cta-link" href="questionnaire-dashboard.html">Start giving your feedback to earn money</a>
           <h2>Current Session</h2>
           <p>Once authenticated, your account profile is loaded from PostgreSQL.</p>
         </div>
@@ -101,6 +115,7 @@
     </main>
 
     <footer>
+      <p>© EthioSurvey — onboarding and role-based dashboards ready.</p>
       <p>© EthioSurvey — Ready for production onboarding workflows.</p>
     </footer>
 

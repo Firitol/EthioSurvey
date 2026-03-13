@@ -1,5 +1,13 @@
 # EthioSurvey Web Application
 
+EthioSurvey now includes production-ready role-based onboarding with:
+
+- Registration as **freelancer**, **employee**, or **company**
+- Secure login/logout with Supabase Auth
+- Role-specific dashboards:
+  - `workers-dashboard.html` (freelancers + employees)
+  - `companies-dashboard.html` (companies)
+- `questionnaire-dashboard.html` for starting paid feedback tasks
 EthioSurvey now includes a production-style onboarding flow with:
 
 - Freelancer and company registration
@@ -45,6 +53,7 @@ The app writes account details into `public.profiles`:
 - `id` (UUID, linked to `auth.users.id`)
 - `full_name`
 - `email`
+- `account_type` (`freelancer`, `employee`, or `company`)
 - `account_type` (`freelancer` or `company`)
 - `phone`
 - `company_name`
@@ -52,5 +61,7 @@ The app writes account details into `public.profiles`:
 
 ## Notes
 
+- Company users are required to provide `company_name` during registration.
+- Workers and companies are redirected to separate dashboards after login.
 - If email confirmation is enabled in Supabase Auth, users must confirm before login.
 - Company users are required to provide `company_name` at registration.

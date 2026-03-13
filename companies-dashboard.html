@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EthioSurvey | Companies Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__content">
+        <p class="eyebrow">Companies Dashboard</p>
+        <h1>Company Management Workspace</h1>
+        <p class="hero__subtitle">Manage your organization profile and review feedback operations.</p>
+      </div>
+    </header>
+
+    <main class="layout single-column">
+      <section class="panel">
+        <h2>Company Profile</h2>
+        <div id="profile-box" class="session-card"><p>Loading profile...</p></div>
+        <p id="dashboard-status" class="status"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Actions</h2>
+        <a class="cta-link" href="questionnaire-dashboard.html">Open questionnaire dashboard</a>
+        <button id="logout-btn" class="secondary" type="button">Logout</button>
+      </section>
+    </main>
+
+    <script type="module" src="dashboard.js"></script>
+  </body>
+</html>

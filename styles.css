@@ -57,6 +57,18 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
+.layout.single-column {
+  grid-template-columns: 1fr;
+}
+
+.layout {
+  width: min(1000px, 92%);
+  margin: -2rem auto 2rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
 .panel {
   background: var(--panel);
   border-radius: 16px;
@@ -89,6 +101,7 @@ body {
   padding: 0.5rem 0.95rem;
   cursor: pointer;
   color: #334155;
+  margin-top: 0;
 }
 
 .tab.is-active {
@@ -154,10 +167,75 @@ button.secondary:hover {
   background: #cbd5e1;
 }
 
+.cta-link {
+  display: inline-block;
+  margin-top: 0.6rem;
+  text-decoration: none;
+  background: var(--brand);
+  color: #fff;
+  padding: 0.65rem 0.95rem;
+  border-radius: 10px;
+}
+
+.cta-link:hover {
+  background: var(--brand-dark);
+}
+
+button.secondary:hover {
+  background: #cbd5e1;
+}
+
 .status {
   min-height: 1.2rem;
   margin-top: 0.75rem;
   color: var(--muted);
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.status.success {
+  color: #0f766e;
+}
+
+.session-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: #fbfdff;
+  margin-top: 0.8rem;
+}
+
+.session-card dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 0.75rem;
+}
+
+.session-card dt {
+  font-weight: 700;
+}
+
+.session-card dd {
+  margin: 0;
+  color: #334155;
+}
+
+.task-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
 }
 
 .status.error {
