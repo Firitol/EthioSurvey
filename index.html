@@ -3,9 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0a9f5c" />
-    <meta name="description" content="EthioSurvey app for surveying Ethiopian services, products, and banks." />
-    <title>EthioSurvey | Service, Product & Bank Feedback</title>
+    <meta name="theme-color" content="#0f172a" />
+    <meta
+      name="description"
+      content="EthioSurvey connects freelancers, employees, and companies with secure account registration and login."
+    />
+    <title>EthioSurvey | Auth Portal</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icons/icon.svg" />
@@ -13,186 +16,96 @@
   </head>
   <body>
     <header class="hero">
-      <div class="lang-switch">
-        <label for="language-select">Language</label>
-        <select id="language-select">
-          <option value="en">English</option>
-          <option value="am">አማርኛ (Amharic)</option>
-          <option value="om">Afaan Oromoo</option>
-        </select>
-      </div>
-      <h1>EthioSurvey</h1>
-      <p>
-        Collect and review customer feedback on Ethiopian services, products, and
-        banks in one place.
-      </p>
-      <div class="install-box">
-        <button id="install-btn" type="button" hidden>Install EthioSurvey</button>
-        <p id="install-status" class="install-status">
-          Tip: Once installed, EthioSurvey works like a mobile app.
+      <div class="hero__content">
+        <p class="eyebrow">EthioSurvey Platform</p>
+        <h1>Professional onboarding for workers and companies</h1>
+        <p class="hero__subtitle">
+          Register as a freelancer, employee, or company and access role-specific dashboards.
         </p>
       </div>
     </header>
 
-    <main class="container">
-      <section class="card">
-        <h2 id="account-title">Create Account</h2>
-        <form id="account-form">
+    <main class="layout">
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Account Access</h2>
+          <p>Create a new account or log in to continue.</p>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Authentication tabs">
+          <button id="tab-register" class="tab is-active" type="button" role="tab" aria-selected="true">Register</button>
+          <button id="tab-login" class="tab" type="button" role="tab" aria-selected="false">Login</button>
+        </div>
+
+        <form id="register-form" class="auth-form" novalidate>
           <div class="field-grid">
             <label>
-              Full Name
-              <input id="user-name" type="text" placeholder="e.g. Sara Bekele" required />
+              Full name
+              <input id="register-name" type="text" placeholder="e.g. Sara Bekele" required />
             </label>
-
             <label>
               Email
-              <input id="user-email" type="email" placeholder="e.g. sara@email.com" required />
+              <input id="register-email" type="email" placeholder="you@domain.com" required />
+            </label>
+            <label>
+              Password
+              <input id="register-password" type="password" placeholder="At least 6 characters" minlength="6" required />
+            </label>
+            <label>
+              Account type
+              <select id="register-role" required>
+                <option value="">Choose role</option>
+                <option value="freelancer">Freelancer</option>
+                <option value="employee">Employee</option>
+                <option value="company">Company</option>
+              </select>
+            </label>
+            <label>
+              Phone (optional)
+              <input id="register-phone" type="tel" placeholder="+251..." />
+            </label>
+            <label>
+              Company name (required for company accounts)
+              <input id="register-company" type="text" placeholder="e.g. Addis Insight PLC" />
             </label>
           </div>
-
-          <button type="submit">Create Account</button>
-          <p id="account-status" class="status"></p>
-          <p id="account-summary" class="summary"></p>
+          <button type="submit">Create account</button>
         </form>
-      </section>
 
-      <section class="card">
-        <h2 id="survey-title">Submit a Survey</h2>
-        <form id="survey-form">
+        <form id="login-form" class="auth-form is-hidden" novalidate>
           <div class="field-grid">
             <label>
-              Survey Type
-              <select id="survey-type" required>
-                <option value="">Choose type</option>
-                <option value="Service">Service</option>
-                <option value="Product">Product</option>
-                <option value="Bank">Bank</option>
-              </select>
+              Email
+              <input id="login-email" type="email" placeholder="you@domain.com" required />
             </label>
-
             <label>
-              Name of Service / Product / Bank
-              <input
-                id="entity-name"
-                type="text"
-                placeholder="e.g. Ethiopian Airlines, CBE, local product"
-                required
-              />
-            </label>
-
-            <label>
-              Region or City
-              <input id="location" type="text" placeholder="e.g. Addis Ababa" required />
-            </label>
-
-            <label>
-              Rating (1-5)
-              <input id="rating" type="number" min="1" max="5" required />
-            </label>
-
-            <label>
-              Number of Questions Answered
-              <input id="question-count" type="number" min="1" value="1" required />
-            </label>
-
-            <label>
-              Earning per Question (ETB)
-              <input id="earning-per-question" type="number" min="1" value="10" required />
-            </label>
-
-            <label>
-              Company Payment Method
-              <select id="payment-method" required>
-                <option value="">Choose payment method</option>
-                <option value="Telebirr">Telebirr</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="CBE Birr">CBE Birr</option>
-                <option value="Cash">Cash</option>
-              </select>
-            </label>
-
-            <label>
-              Company Payment Account
-              <input id="payment-account" type="text" placeholder="Account number / phone" required />
+              Password
+              <input id="login-password" type="password" placeholder="Your password" required />
             </label>
           </div>
-
-          <label>
-            Feedback
-            <textarea
-              id="comment"
-              rows="4"
-              placeholder="Share quality, access, price, customer support, etc."
-              required
-            ></textarea>
-          </label>
-
-          <label>
-            Upload Questions File (JSON/CSV/TXT)
-            <input id="questions-file" type="file" accept=".json,.csv,.txt" />
-          </label>
-
-          <div class="testing-box">
-            <div class="testing-head">
-              <h3>Answer Testing Mode</h3>
-              <button id="start-testing" type="button" class="secondary" disabled>Start Testing</button>
-            </div>
-            <p id="testing-help" class="summary">Upload a question file to run local answer checks before saving.</p>
-            <p id="testing-question" class="testing-question"></p>
-            <div class="testing-controls">
-              <input id="testing-answer" type="text" placeholder="Type your answer" disabled />
-              <button id="submit-answer" type="button" class="secondary" disabled>Check Answer</button>
-            </div>
-            <p id="testing-status" class="status"></p>
-          </div>
-
-          <button type="submit">Save Survey</button>
-          <p id="form-status" class="status"></p>
+          <button type="submit">Login</button>
         </form>
+
+        <p id="auth-status" class="status"></p>
       </section>
 
-      <section class="card">
-        <div class="section-head">
-          <h2 id="results-title">Survey Results</h2>
-          <div class="filters">
-            <select id="filter-type">
-              <option value="All">All types</option>
-              <option value="Service">Service</option>
-              <option value="Product">Product</option>
-              <option value="Bank">Bank</option>
-            </select>
-            <button id="clear-data" type="button" class="danger">Clear All</button>
-          </div>
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Quick Access</h2>
+          <p>Jump directly to the questionnaire dashboard after login.</p>
         </div>
-
-        <div id="summary" class="summary"></div>
-        <ul id="survey-list" class="survey-list"></ul>
-      </section>
-
-      <section class="card full-width">
-        <h2 id="reports-title">Stored Surveying Reports</h2>
-        <p class="summary" id="report-summary"></p>
-        <div class="table-wrap">
-          <table id="report-table">
-            <thead>
-              <tr>
-                <th>Company</th>
-                <th>Surveys</th>
-                <th>Questions</th>
-                <th>Total Paid (ETB)</th>
-                <th>Payment Methods</th>
-              </tr>
-            </thead>
-            <tbody id="report-body"></tbody>
-          </table>
+        <a class="cta-link" href="questionnaire-dashboard.html">Start giving your feedback to earn money</a>
+        <div id="session-card" class="session-card">
+          <p>No active session.</p>
         </div>
+        <button id="logout-btn" class="secondary" type="button" hidden>Logout</button>
       </section>
     </main>
 
     <footer>
-      <p id="footer-text">Built for Ethiopia-wide feedback collection.</p>
+      <p>© EthioSurvey — onboarding and role-based dashboards ready.</p>
     </footer>
 
-   <script type="module" src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
