@@ -1,249 +1,232 @@
 import { createClient } from "@supabase/supabase-js";
 
+/* =========================
+   DOM ELEMENTS
+========================= */
+
+const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById("registerForm");
+const statusEl = document.getElementById("status");
+
+/* =========================
+   CONSTANTS
+========================= */
+
+const REPORT_STORAGE_KEY = "ethiosurvey_reports";
+
+/* =========================
+   SUPABASE INIT
+========================= */
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const statusEl = document.getElementById("auth-status");
-const registerForm = document.getElementById("register-form");
-const loginForm = document.getElementById("login-form");
-const tabRegister = document.getElementById("tab-register");
-const tabLogin = document.getElementById("tab-login");
-const sessionCard = document.getElementById("session-card");
-const logoutBtn = document.getElementById("logout-btn");
-
-let supabase;
+let supabase = null;
 
 if (supabaseUrl && supabaseAnonKey) {
   supabase = createClient(supabaseUrl, supabaseAnonKey);
 } else {
-  setStatus("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in environment.", "error");
+  setStatus(
+    "Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables",
+    "error"
+  );
 }
 
+/* =========================
+   STATUS HANDLER
+========================= */
+
 function setStatus(message, tone = "") {
+  if (!statusEl) return;
   statusEl.textContent = message;
   statusEl.className = `status ${tone}`.trim();
 }
+
+/* =========================
+   UTILITIES
+========================= */
+
+function normalizeAnswer(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+/* =========================
+   LOCAL STORAGE
+========================= */
+
+function readReports() {
+  const raw = localStorage.getItem(REPORT_STORAGE_KEY);
+  if (!raw) return {};
+
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeReports(data) {
+  localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(data));
+}
+
+/* =========================
+   FILE PARSER
+========================= */
+
+function parseQuestionsFile(text, extension) {
+  if (extension === "json") {
+    const parsed = JSON.parse(text);
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((row) => ({
+        question: row?.question,
+        answer: row?.answer
+      }))
+      .filter((row) => row.question && row.answer);
+  }
+
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return [];
+
+  return lines
+    .map((line) => {
+      const separator = extension === "csv" ? "," : "|";
+      const pieces = line.split(separator);
+
+      if (pieces.length < 2) return null;
+
+      const question = pieces[0].trim();
+      const answer = pieces.slice(1).join(separator).trim();
+
+      return question && answer ? { question, answer } : null;
+    })
+    .filter(Boolean);
+}
+
+/* =========================
+   ROLE ROUTING
+========================= */
 
 function routeByRole(role) {
   if (role === "company") {
-    window.location.href = "companies-dashboard.html";
+    window.location.href = "/companies-dashboard.html";
     return;
   }
 
-  window.location.href = "workers-dashboard.html";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-const statusEl = document.getElementById("auth-status");
-const registerForm = document.getElementById("register-form");
-const loginForm = document.getElementById("login-form");
-const tabRegister = document.getElementById("tab-register");
-const tabLogin = document.getElementById("tab-login");
-const sessionCard = document.getElementById("session-card");
-const logoutBtn = document.getElementById("logout-btn");
-
-let supabase;
-
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-} else {
-  setStatus("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in environment.", "error");
-}
-
-function setStatus(message, tone = "") {
-  statusEl.textContent = message;
-  statusEl.className = `status ${tone}`.trim();
-}
-
-function setTab(mode) {
-  const registerMode = mode === "register";
-  registerForm.classList.toggle("is-hidden", !registerMode);
-  loginForm.classList.toggle("is-hidden", registerMode);
-  tabRegister.classList.toggle("is-active", registerMode);
-  tabLogin.classList.toggle("is-active", !registerMode);
-  tabRegister.setAttribute("aria-selected", String(registerMode));
-  tabLogin.setAttribute("aria-selected", String(!registerMode));
-  setStatus("");
-}
-
-function renderSession(profile, user) {
-  if (!user) {
-    sessionCard.innerHTML = "<p>No active session.</p>";
-    logoutBtn.hidden = true;
+  if (role === "worker") {
+    window.location.href = "/workers-dashboard.html";
     return;
   }
 
-  sessionCard.innerHTML = `
-    <dl>
-      <dt>Name</dt><dd>${profile?.full_name || "Not provided"}</dd>
-      <dt>Email</dt><dd>${user.email}</dd>
-      <dt>Role</dt><dd>${profile?.account_type || "Not set"}</dd>
-      <dt>Phone</dt><dd>${profile?.phone || "Not set"}</dd>
-      <dt>Company</dt><dd>${profile?.company_name || "Not set"}</dd>
-    </dl>
-  `;
-  logoutBtn.hidden = false;
+  window.location.href = "/";
 }
 
-async function fetchProfile(userId) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("full_name, account_type, phone, company_name")
-    .eq("id", userId)
-    .single();
+/* =========================
+   AUTHENTICATION
+========================= */
 
-  if (error) {
-    setStatus(error.message, "error");
-    return null;
-  }
-
-  return data;
-}
-
-async function loadSession() {
-  if (!supabase) return;
-
-  const { data, error } = await supabase.auth.getSession();
-  if (error) {
-    setStatus(error.message, "error");
-    return;
-  }
-
-  const user = data.session?.user;
-  if (!user) {
-    renderSession(null, null);
-    return;
-  }
-
-  const profile = await fetchProfile(user.id);
-  renderSession(profile, user);
-}
-
-registerForm.addEventListener("submit", async (event) => {
+async function handleRegister(event) {
   event.preventDefault();
-  if (!supabase) return;
 
-  const fullName = document.getElementById("register-name").value.trim();
-  const email = document.getElementById("register-email").value.trim();
-  const password = document.getElementById("register-password").value;
-  const accountType = document.getElementById("register-role").value;
-  const phone = document.getElementById("register-phone").value.trim();
-  const companyName = document.getElementById("register-company").value.trim();
+  const email = document.getElementById("registerEmail").value;
+  const password = document.getElementById("registerPassword").value;
+  const role = document.getElementById("registerRole").value;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, account_type, phone, company_name")
-    .eq("id", user.id)
-    .single();
+  setStatus("Creating account...");
 
-  renderSession(profile, user);
-}
-
-registerForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!supabase) return;
-
-  const fullName = document.getElementById("register-name").value.trim();
-  const email = document.getElementById("register-email").value.trim();
-  const password = document.getElementById("register-password").value;
-  const accountType = document.getElementById("register-role").value;
-  const phone = document.getElementById("register-phone").value.trim();
-  const companyName = document.getElementById("register-company").value.trim();
-
-  if (accountType === "company" && !companyName) {
-    setStatus("Company name is required for company accounts.", "error");
-    return;
-  }
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-        account_type: accountType,
-        phone,
-        company_name: companyName || null
-      }
-    }
-  });
-
-  if (error) {
-    setStatus(error.message, "error");
-    return;
-  }
-
-  const userId = data.user?.id;
-
-  if (userId) {
-    const { error: profileError } = await supabase.from("profiles").upsert({
-      id: userId,
-      full_name: fullName,
+  try {
+    const { error } = await supabase.auth.signUp({
       email,
-      account_type: accountType,
-      phone: phone || null,
-      company_name: companyName || null
+      password
     });
 
-    if (profileError) {
-      setStatus(`Account created but profile save failed: ${profileError.message}`, "error");
-      return;
-    }
+    if (error) throw error;
+
+    setStatus("Account created successfully", "success");
+
+    routeByRole(role);
+  } catch (err) {
+    setStatus(err.message, "error");
   }
+}
 
-  setStatus("Registration successful.", "success");
-  registerForm.reset();
-
-  if (data.session) {
-    routeByRole(accountType);
-    return;
-  }
-
-
-  setStatus("Registration successful. Check your email if confirmation is enabled.", "success");
-  registerForm.reset();
-  await loadSession();
-});
-
-loginForm.addEventListener("submit", async (event) => {
+async function handleLogin(event) {
   event.preventDefault();
-  if (!supabase) return;
 
-  const email = document.getElementById("login-email").value.trim();
-  const password = document.getElementById("login-password").value;
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    setStatus(error.message, "error");
-    return;
+  setStatus("Signing in...");
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) throw error;
+
+    const user = data.user;
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    setStatus("Login successful", "success");
+
+    routeByRole("worker");
+  } catch (err) {
+    setStatus(err.message, "error");
   }
+}
 
-  const profile = await fetchProfile(data.user.id);
-  setStatus("Login successful.", "success");
-  loginForm.reset();
-  routeByRole(profile?.account_type);
-  setStatus("Login successful.", "success");
-  loginForm.reset();
-  await loadSession();
-});
+/* =========================
+   EVENT LISTENERS
+========================= */
 
-logoutBtn.addEventListener("click", async () => {
-  if (!supabase) return;
+if (registerForm) {
+  registerForm.addEventListener("submit", handleRegister);
+}
 
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    setStatus(error.message, "error");
-    return;
-  }
+if (loginForm) {
+  loginForm.addEventListener("submit", handleLogin);
+}
 
-  setStatus("Logged out.", "success");
-  renderSession(null, null);
-});
+/* =========================
+   FILE IMPORT HANDLER
+========================= */
 
-tabRegister.addEventListener("click", () => setTab("register"));
-tabLogin.addEventListener("click", () => setTab("login"));
+const fileInput = document.getElementById("questionsFile");
 
-setTab("register");
-loadSession();
+if (fileInput) {
+  fileInput.addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    const extension = file.name.split(".").pop().toLowerCase();
+
+    const text = await file.text();
+
+    try {
+      const questions = parseQuestionsFile(text, extension);
+
+      const reports = readReports();
+
+      reports[file.name] = questions;
+
+      writeReports(reports);
+
+      setStatus("Questions imported successfully", "success");
+    } catch (err) {
+      setStatus("Failed to parse file", "error");
+    }
+  });
+}
