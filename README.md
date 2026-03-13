@@ -57,3 +57,24 @@ The app writes account details into `public.profiles`:
 
 - Company users are required to provide `company_name` during registration.
 - Workers and companies are redirected to separate dashboards after login.
+
+
+## If your branch has complex merge conflicts
+
+If conflict resolution is blocking deployment, you can apply this branch directly:
+
+```bash
+git fetch origin
+# from your destination branch
+git checkout <your-branch>
+git checkout work -- .
+git commit -m "Apply EthioSurvey auth/dashboard update from work branch"
+git push
+```
+
+Then run:
+
+```bash
+npm install
+npm run build
+```
