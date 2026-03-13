@@ -31,6 +31,29 @@ function routeByRole(role) {
   }
 
   window.location.href = "workers-dashboard.html";
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+const statusEl = document.getElementById("auth-status");
+const registerForm = document.getElementById("register-form");
+const loginForm = document.getElementById("login-form");
+const tabRegister = document.getElementById("tab-register");
+const tabLogin = document.getElementById("tab-login");
+const sessionCard = document.getElementById("session-card");
+const logoutBtn = document.getElementById("logout-btn");
+
+let supabase;
+
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+} else {
+  setStatus("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in environment.", "error");
+}
+
+function setStatus(message, tone = "") {
+  statusEl.textContent = message;
+  statusEl.className = `status ${tone}`.trim();
 }
 
 function setTab(mode) {
@@ -108,6 +131,26 @@ registerForm.addEventListener("submit", async (event) => {
   const phone = document.getElementById("register-phone").value.trim();
   const companyName = document.getElementById("register-company").value.trim();
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, account_type, phone, company_name")
+    .eq("id", user.id)
+    .single();
+
+  renderSession(profile, user);
+}
+
+registerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!supabase) return;
+
+  const fullName = document.getElementById("register-name").value.trim();
+  const email = document.getElementById("register-email").value.trim();
+  const password = document.getElementById("register-password").value;
+  const accountType = document.getElementById("register-role").value;
+  const phone = document.getElementById("register-phone").value.trim();
+  const companyName = document.getElementById("register-company").value.trim();
+
   if (accountType === "company" && !companyName) {
     setStatus("Company name is required for company accounts.", "error");
     return;
@@ -157,6 +200,9 @@ registerForm.addEventListener("submit", async (event) => {
     return;
   }
 
+
+  setStatus("Registration successful. Check your email if confirmation is enabled.", "success");
+  registerForm.reset();
   await loadSession();
 });
 
@@ -168,6 +214,7 @@ loginForm.addEventListener("submit", async (event) => {
   const password = document.getElementById("login-password").value;
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     setStatus(error.message, "error");
     return;
@@ -177,6 +224,9 @@ loginForm.addEventListener("submit", async (event) => {
   setStatus("Login successful.", "success");
   loginForm.reset();
   routeByRole(profile?.account_type);
+  setStatus("Login successful.", "success");
+  loginForm.reset();
+  await loadSession();
 });
 
 logoutBtn.addEventListener("click", async () => {

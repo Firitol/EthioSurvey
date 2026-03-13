@@ -8,6 +8,11 @@ EthioSurvey now includes production-ready role-based onboarding with:
   - `workers-dashboard.html` (freelancers + employees)
   - `companies-dashboard.html` (companies)
 - `questionnaire-dashboard.html` for starting paid feedback tasks
+EthioSurvey now includes a production-style onboarding flow with:
+
+- Freelancer and company registration
+- Secure login/logout
+- PostgreSQL-backed profile storage using Supabase
 
 ## Tech stack
 
@@ -49,6 +54,7 @@ The app writes account details into `public.profiles`:
 - `full_name`
 - `email`
 - `account_type` (`freelancer`, `employee`, or `company`)
+- `account_type` (`freelancer` or `company`)
 - `phone`
 - `company_name`
 - `created_at`
@@ -57,3 +63,5 @@ The app writes account details into `public.profiles`:
 
 - Company users are required to provide `company_name` during registration.
 - Workers and companies are redirected to separate dashboards after login.
+- If email confirmation is enabled in Supabase Auth, users must confirm before login.
+- Company users are required to provide `company_name` at registration.

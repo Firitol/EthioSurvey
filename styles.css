@@ -61,6 +61,14 @@ body {
   grid-template-columns: 1fr;
 }
 
+.layout {
+  width: min(1000px, 92%);
+  margin: -2rem auto 2rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
 .panel {
   background: var(--panel);
   border-radius: 16px;
@@ -173,6 +181,10 @@ button.secondary:hover {
   background: var(--brand-dark);
 }
 
+button.secondary:hover {
+  background: #cbd5e1;
+}
+
 .status {
   min-height: 1.2rem;
   margin-top: 0.75rem;
@@ -222,6 +234,39 @@ button.secondary:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
+}
+
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.status.success {
+  color: #0f766e;
+}
+
+.session-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: #fbfdff;
+}
+
+.session-card dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 0.75rem;
+}
+
+.session-card dt {
+  font-weight: 700;
+}
+
+.session-card dd {
+  margin: 0;
+  color: #334155;
 }
 
 footer {

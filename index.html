@@ -9,6 +9,9 @@
       content="EthioSurvey connects freelancers, employees, and companies with secure account registration and login."
     />
     <title>EthioSurvey | Auth Portal</title>
+      content="EthioSurvey connects Ethiopian freelancers and companies with secure account registration and login."
+    />
+    <title>EthioSurvey | Freelancer & Company Portal</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icons/icon.svg" />
@@ -21,6 +24,9 @@
         <h1>Professional onboarding for workers and companies</h1>
         <p class="hero__subtitle">
           Register as a freelancer, employee, or company and access role-specific dashboards.
+        <h1>Professional onboarding for freelancers and companies</h1>
+        <p class="hero__subtitle">
+          Create an account, choose your role, and securely access the EthioSurvey portal powered by PostgreSQL.
         </p>
       </div>
     </header>
@@ -30,6 +36,7 @@
         <div class="panel__head">
           <h2>Account Access</h2>
           <p>Create a new account or log in to continue.</p>
+          <p>Register a new account or log in to your existing workspace.</p>
         </div>
 
         <div class="tabs" role="tablist" aria-label="Authentication tabs">
@@ -46,6 +53,7 @@
             <label>
               Email
               <input id="register-email" type="email" placeholder="you@domain.com" required />
+              <input id="register-email" type="email" placeholder="you@company.com" required />
             </label>
             <label>
               Password
@@ -77,6 +85,7 @@
             <label>
               Email
               <input id="login-email" type="email" placeholder="you@domain.com" required />
+              <input id="login-email" type="email" placeholder="you@company.com" required />
             </label>
             <label>
               Password
@@ -95,6 +104,9 @@
           <p>Jump directly to the questionnaire dashboard after login.</p>
         </div>
         <a class="cta-link" href="questionnaire-dashboard.html">Start giving your feedback to earn money</a>
+          <h2>Current Session</h2>
+          <p>Once authenticated, your account profile is loaded from PostgreSQL.</p>
+        </div>
         <div id="session-card" class="session-card">
           <p>No active session.</p>
         </div>
@@ -104,6 +116,7 @@
 
     <footer>
       <p>© EthioSurvey — onboarding and role-based dashboards ready.</p>
+      <p>© EthioSurvey — Ready for production onboarding workflows.</p>
     </footer>
 
     <script type="module" src="app.js"></script>
