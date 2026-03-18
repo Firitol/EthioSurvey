@@ -8,9 +8,6 @@
       name="description"
       content="EthioSurvey connects freelancers, employees, and companies with secure account registration and login."
     />
-    <title>EthioSurvey | Auth Portal</title>
-      content="EthioSurvey connects Ethiopian freelancers and companies with secure account registration and login."
-    />
     <title>EthioSurvey | Freelancer & Company Portal</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
@@ -21,12 +18,9 @@
     <header class="hero">
       <div class="hero__content">
         <p class="eyebrow">EthioSurvey Platform</p>
-        <h1>Professional onboarding for workers and companies</h1>
+        <h1>Ethio Services and Products Survey</h1>
         <p class="hero__subtitle">
-          Register as a freelancer, employee, or company and access role-specific dashboards.
-        <h1>ETHIO SERVICES AND PRODUCTS SURVEY</h1>
-        <p class="hero__subtitle">
-          Create an account, choose your role, and securely access the EthioSurvey portal powered by PostgreSQL.
+          Create an account, choose your role, and securely access the EthioSurvey portal powered by Supabase.
         </p>
       </div>
     </header>
@@ -35,17 +29,20 @@
       <section class="panel">
         <div class="panel__head">
           <h2>Account Access</h2>
-          <p>Create a new account or log in to continue.</p>
           <p>Register a new account or log in to your existing workspace.</p>
         </div>
 
         <div class="tabs" role="tablist" aria-label="Authentication tabs">
-          <button id="tab-register" class="tab is-active" type="button" role="tab" aria-selected="true">Register</button>
-          <button id="tab-login" class="tab" type="button" role="tab" aria-selected="false">Login</button>
+          <button id="tab-register" class="tab is-active" type="button" role="tab" aria-controls="register-form" aria-selected="true">
+            Register
+          </button>
+          <button id="tab-login" class="tab" type="button" role="tab" aria-controls="login-form" aria-selected="false">
+            Login
+          </button>
         </div>
 
         <form id="register-form" class="auth-form" novalidate>
-          <div class="field-grid">
+          <div class="field-grid field-grid--two">
             <label>
               Full name
               <input id="register-name" type="text" placeholder="e.g. Sara Bekele" required />
@@ -53,7 +50,6 @@
             <label>
               Email
               <input id="register-email" type="email" placeholder="you@domain.com" required />
-              <input id="register-email" type="email" placeholder="you@company.com" required />
             </label>
             <label>
               Password
@@ -72,8 +68,8 @@
               Phone (optional)
               <input id="register-phone" type="tel" placeholder="+251..." />
             </label>
-            <label>
-              Company name (required for company accounts)
+            <label id="company-field">
+              Company name <span class="field-hint">(required for company accounts)</span>
               <input id="register-company" type="text" placeholder="e.g. Addis Insight PLC" />
             </label>
           </div>
@@ -85,7 +81,6 @@
             <label>
               Email
               <input id="login-email" type="email" placeholder="you@domain.com" required />
-              <input id="login-email" type="email" placeholder="you@company.com" required />
             </label>
             <label>
               Password
@@ -95,17 +90,16 @@
           <button type="submit">Login</button>
         </form>
 
-        <p id="auth-status" class="status"></p>
+        <p id="auth-status" class="status" aria-live="polite"></p>
       </section>
 
       <section class="panel">
         <div class="panel__head">
-          <h2>Quick Access</h2>
-          <p>Start here.</p>
-        </div>
-        <a class="cta-link" href="questionnaire-dashboard.html">Start giving your feedback to earn money</a>
           <h2>Current Session</h2>
-          <p>Once authenticated, your account profile is loaded from PostgreSQL.</p>
+          <p>Once authenticated, your account profile is loaded from Supabase.</p>
+        </div>
+        <div class="quick-links">
+          <a class="cta-link" href="questionnaire-dashboard.html">Start giving your feedback to earn money</a>
         </div>
         <div id="session-card" class="session-card">
           <p>No active session.</p>
@@ -116,9 +110,8 @@
 
     <footer>
       <p>© EthioSurvey — onboarding and role-based dashboards ready.</p>
-      <p>© EthioSurvey — Ready for production onboarding workflows.</p>
     </footer>
 
-   <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
